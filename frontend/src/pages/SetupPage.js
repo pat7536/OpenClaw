@@ -55,8 +55,21 @@ export default function SetupPage() {
     return 'Redirecting to Control UI';
   }, [progress]);
 
-  const goToControlUI = () => {
-    window.location.href = `${API}/moltbot/ui/`;
+  const goToControlUI = async () => {
+    try {
+      // Fetch the token to pass to the Control UI
+      const res = await fetch(`${API}/moltbot/token`);
+      if (res.ok) {
+        const data = await res.json();
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const gatewayWsUrl = `${wsProtocol}//${window.location.host}/api/moltbot/ws`;
+        window.location.href = `${API}/moltbot/ui/?gatewayUrl=${encodeURIComponent(gatewayWsUrl)}&token=${encodeURIComponent(data.token)}`;
+      } else {
+        window.location.href = `${API}/moltbot/ui/`;
+      }
+    } catch (e) {
+      window.location.href = `${API}/moltbot/ui/`;
+    }
   };
 
   async function start() {
