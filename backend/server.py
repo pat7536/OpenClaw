@@ -298,6 +298,15 @@ async def stop_moltbot():
     return {"ok": True, "message": "Moltbot stopped"}
 
 
+@api_router.get("/moltbot/token")
+async def get_moltbot_token():
+    """Get the current gateway token for authentication"""
+    if not check_gateway_running():
+        raise HTTPException(status_code=404, detail="Moltbot not running")
+    return {"token": gateway_state.get("token")}
+
+
+
 # Reverse Proxy for Moltbot Control UI
 @api_router.api_route("/moltbot/ui/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 async def proxy_moltbot_ui(request: Request, path: str = ""):
