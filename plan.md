@@ -119,21 +119,29 @@ Exit Criteria (Phase 2):
 - ✅ Verified gateway can start and serve Control UI on port 18789
 - ✅ Implemented HTTP reverse proxy for Moltbot UI at /api/moltbot/ui/
 - ✅ Implemented WebSocket proxy for Moltbot at /api/moltbot/ws
+- ✅ Fixed WebSocket authentication by passing token via URL query params
 
 ### Phase 2: Main App - COMPLETED
-- ✅ Built FastAPI backend with start/status/stop endpoints
+- ✅ Built FastAPI backend with start/status/stop/token endpoints
 - ✅ Built React setup page with provider selection (Anthropic/OpenAI)
 - ✅ Dark theme matching Moltbot aesthetic (#FF4500 accent)
 - ✅ API key input with show/hide toggle
 - ✅ Loading states and progress indicator
 - ✅ Error handling and validation
 - ✅ Status check on page load
-- ✅ Redirect to Moltbot Control UI after successful start
+- ✅ Redirect to Moltbot Control UI with token authentication after successful start
 
-### Testing: PASSED 100%
+### WebSocket Proxy Solution:
+- Gateway binds to `lan` mode with token authentication
+- HTML injection rewrites WebSocket URLs to use our proxy path
+- Token is passed via `?gatewayUrl=...&token=...` URL params which Control UI reads
+- Control UI now connects successfully and shows "Health: OK"
+
+### Testing: PASSED
 - Backend: All endpoints working correctly
 - Frontend: All UI features working correctly
-- Integration: Complete flow from setup to Control UI
+- WebSocket: Connected and authenticated successfully
+- Control UI: Full functionality available (Chat, Config, Channels, etc.)
 
 ## Success Criteria
 - From the preview URL, a user can:
