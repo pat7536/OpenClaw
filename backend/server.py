@@ -156,11 +156,14 @@ async def start_gateway_process(api_key: str, provider: str):
     elif provider == "openai":
         env["OPENAI_API_KEY"] = api_key
     
+    # Set gateway token for auth
+    env["CLAWDBOT_GATEWAY_TOKEN"] = token
+    
     # Start the gateway
     logger.info(f"Starting Moltbot gateway on port {MOLTBOT_PORT}...")
     
     process = subprocess.Popen(
-        ["clawdbot", "gateway", "--port", str(MOLTBOT_PORT), "--bind", "lan", "--allow-unconfigured"],
+        ["clawdbot", "gateway", "--port", str(MOLTBOT_PORT), "--bind", "lan", "--token", token, "--allow-unconfigured"],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
