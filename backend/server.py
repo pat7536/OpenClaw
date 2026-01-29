@@ -416,30 +416,67 @@ async def websocket_proxy(websocket: WebSocket):
         return
     
     moltbot_ws_url = f"ws://127.0.0.1:{MOLTBOT_PORT}/"
+    logger.info(f"WebSocket proxy connecting to: {moltbot_ws_url}")
     
     try:
-        async with websockets.connect(moltbot_ws_url) as moltbot_ws:
+        async with websockets.connect(
+            moltbot_ws_url,
+            ping_interval=20,
+            ping_timeout=20,
+            close_timeout=10
+        ) as moltbot_ws:
+            
             async def client_to_moltbot():
                 try:
                     while True:
-                        data = await websocket.receive_text()
-                        await moltbot_ws.send(data)
-                except WebSocketDisconnect:
-                    pass
+                        try:
+                            data = await websocket.receive()
+                            if data["type"] == "websocket.receive":
+                                if "text" in data:
+                                    await moltbot_ws.send(data["text"])
+                                elif "bytes" in data:
+                                    await moltbot_ws.send(data["bytes"])
+                            elif data["type"] == "websocket.disconnect":
+                                break
+                        except WebSocketDisconnect:
+                            break
                 except Exception as e:
                     logger.error(f"Client to Moltbot error: {e}")
             
             async def moltbot_to_client():
                 try:
                     async for message in moltbot_ws:
-                        await websocket.send_text(message)
+                        if websocket.client_state == WebSocketState.CONNECTED:
+                            if isinstance(message, str):
+                                await websocket.send_text(message)
+                            else:
+                                await websocket.send_bytes(message)
+                except ConnectionClosed as e:
+                    logger.info(f"Moltbot WebSocket closed: {e}")
                 except Exception as e:
                     logger.error(f"Moltbot to client error: {e}")
             
-            await asyncio.gather(client_to_moltbot(), moltbot_to_client())
+            # Run both directions concurrently
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(client_to_moltbot()),
+                    asyncio.create_task(moltbot_to_client())
+                ],
+                return_when=asyncio.FIRST_COMPLETED
+            )
+            
+            # Cancel pending tasks
+            for task in pending:
+                task.cancel()
+                
     except Exception as e:
         logger.error(f"WebSocket proxy error: {e}")
-        await websocket.close(code=1011, reason="Internal error")
+    finally:
+        try:
+            if websocket.client_state == WebSocketState.CONNECTED:
+                await websocket.close(code=1011, reason="Proxy connection ended")
+        except:
+            pass
 
 
 # Legacy status endpoints
