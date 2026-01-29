@@ -387,7 +387,7 @@ export default function SetupPage() {
                   </Select>
                   {provider === 'emergent' && (
                     <p className="text-xs text-[#22c55e]">
-                      Pre-configured with GPT-5.2 and Claude Sonnet 4.5
+                      Pre-configured with GPT-5.2 - no API key needed
                     </p>
                   )}
                 </div>
