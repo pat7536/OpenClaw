@@ -13,22 +13,26 @@
   },
   {
     "content": "Phase 1: Implement reverse proxy (HTTP + WebSocket) in backend",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Phase 1: Verify POC - Moltbot UI loads through proxy",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Build backend endpoints (start/status/stop)",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Build React setup page with provider selection",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: End-to-end testing with Testing Agent",
+    "status": "in_progress"
+  },
+  {
+    "content": "Phase 2: All user stories covered in Development and testing",
     "status": "pending"
   }
 ]
