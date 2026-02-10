@@ -76,6 +76,30 @@ class StatusCheckCreate(BaseModel):
     client_name: str
 
 
+# ============== Brave Search Models ==============
+
+class BraveSearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=200, description="Search query string")
+    count: int = Field(default=10, ge=1, le=20, description="Number of results to return")
+    offset: int = Field(default=0, ge=0, le=9, description="Pagination offset")
+    country: Optional[str] = Field(default=None, description="2-letter country code")
+    search_lang: Optional[str] = Field(default=None, description="Search language (ISO 639-1)")
+
+
+class BraveSearchResult(BaseModel):
+    title: str = Field(description="Result title")
+    url: str = Field(description="Result URL")
+    description: str = Field(description="Result snippet/description")
+    extra_snippets: Optional[List[str]] = Field(default=None, description="Additional text snippets")
+
+
+class BraveSearchResponse(BaseModel):
+    results: List[BraveSearchResult] = Field(description="Search results")
+    query: str = Field(description="Original query string")
+    count: int = Field(description="Number of results returned")
+    more_results_available: bool = Field(description="Whether more results are available")
+
+
 class OpenClawStartRequest(BaseModel):
     provider: str = "emergent"  # "emergent", "anthropic", or "openai"
     apiKey: Optional[str] = None  # Optional - uses Emergent key if not provided
