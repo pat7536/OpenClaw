@@ -1159,6 +1159,82 @@ async def get_status_checks():
     return status_checks
 
 
+# ============== Brave Search Endpoint ==============
+
+BRAVE_API_BASE_URL = "https://api.search.brave.com/res/v1"
+
+@api_router.post("/search", response_model=BraveSearchResponse)
+async def brave_web_search(request: BraveSearchRequest):
+    """
+    Execute a web search using Brave Search API.
+    Returns search results with titles, URLs, and descriptions.
+    """
+    brave_api_key = os.environ.get("BRAVE_API_KEY")
+    if not brave_api_key:
+        raise HTTPException(status_code=500, detail="Brave API key not configured")
+    
+    headers = {
+        "X-Subscription-Token": brave_api_key,
+        "Accept": "application/json",
+        "Accept-Encoding": "gzip"
+    }
+    
+    params = {
+        "q": request.query,
+        "count": request.count,
+        "offset": request.offset,
+        "extra_snippets": True
+    }
+    if request.country:
+        params["country"] = request.country
+    if request.search_lang:
+        params["search_lang"] = request.search_lang
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"{BRAVE_API_BASE_URL}/web/search",
+                headers=headers,
+                params=params
+            )
+            response.raise_for_status()
+            api_response = response.json()
+            
+            # Parse results
+            results = []
+            if "web" in api_response and "results" in api_response["web"]:
+                for item in api_response["web"]["results"]:
+                    result = BraveSearchResult(
+                        title=item.get("title", ""),
+                        url=item.get("url", ""),
+                        description=item.get("description", ""),
+                        extra_snippets=item.get("extra_snippets")
+                    )
+                    results.append(result)
+            
+            more_available = False
+            if "query" in api_response:
+                more_available = api_response["query"].get("more_results_available", False)
+            
+            return BraveSearchResponse(
+                results=results,
+                query=request.query,
+                count=len(results),
+                more_results_available=more_available
+            )
+            
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Brave API error: {e.response.status_code}")
+        if e.response.status_code == 401:
+            raise HTTPException(status_code=401, detail="Invalid or expired Brave API key")
+        elif e.response.status_code == 429:
+            raise HTTPException(status_code=429, detail="Rate limit exceeded. Please try again later.")
+        raise HTTPException(status_code=502, detail="Search service error")
+    except httpx.RequestError as e:
+        logger.error(f"Request failed: {e}")
+        raise HTTPException(status_code=503, detail="Search service temporarily unavailable")
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
